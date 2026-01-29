@@ -15,6 +15,7 @@ static esp_netif_t *s_ap_netif = NULL;
 esp_err_t wifi_ap_start(const wifi_prov_config_t *config)
 {
     s_ap_netif = esp_netif_create_default_wifi_ap();
+    esp_netif_create_default_wifi_sta(); /* needed for scan in APSTA mode */
 
     wifi_config_t wifi_config = {
         .ap = {
@@ -34,7 +35,7 @@ esp_err_t wifi_ap_start(const wifi_prov_config_t *config)
         wifi_config.ap.authmode = WIFI_AUTH_WPA2_PSK;
     }
 
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
 

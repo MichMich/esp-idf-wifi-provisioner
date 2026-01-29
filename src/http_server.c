@@ -56,7 +56,7 @@ static const char PORTAL_HTML[] =
     "</style></head><body>"
     "<div class='c'>"
     "<h1>WiFi Setup</h1>"
-    "<div id='nets'>Scanning&hellip;</div>"
+    "<div id='nets'>Scanning for networks&hellip;</div>"
     "<form method='POST' action='/save'>"
     "<label for='s'>SSID</label>"
     "<input type='text' id='s' name='ssid' required maxlength='32'>"
@@ -75,6 +75,38 @@ static const char PORTAL_HTML[] =
     "}).catch(()=>{document.getElementById('nets').innerHTML='Scan failed.';});"
     "</script>"
     "</body></html>";
+
+/* ── URL decoding ───────────────────────────────────────────────────── */
+
+static int hex_val(char c)
+{
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+}
+
+static void url_decode(char *dst, size_t dst_len, const char *src, size_t src_len)
+{
+    size_t di = 0;
+    for (size_t si = 0; si < src_len && di < dst_len - 1; si++) {
+        if (src[si] == '+') {
+            dst[di++] = ' ';
+        } else if (src[si] == '%' && si + 2 < src_len) {
+            int hi = hex_val(src[si + 1]);
+            int lo = hex_val(src[si + 2]);
+            if (hi >= 0 && lo >= 0) {
+                dst[di++] = (char)((hi << 4) | lo);
+                si += 2;
+            } else {
+                dst[di++] = src[si];
+            }
+        } else {
+            dst[di++] = src[si];
+        }
+    }
+    dst[di] = '\0';
+}
 
 /* ── Handlers ───────────────────────────────────────────────────────── */
 
@@ -111,8 +143,30 @@ static esp_err_t scan_handler(httpd_req_t *req)
     }
     esp_wifi_scan_get_ap_records(&ap_count, ap_records);
 
+    /* Deduplicate by SSID, keeping the strongest signal */
+    uint16_t unique_count = 0;
+    for (int i = 0; i < ap_count; i++) {
+        if (ap_records[i].ssid[0] == '\0') continue; /* skip hidden */
+        bool dup = false;
+        for (int j = 0; j < i; j++) {
+            if (strcmp((char *)ap_records[i].ssid, (char *)ap_records[j].ssid) == 0) {
+                dup = true;
+                if (ap_records[i].rssi > ap_records[j].rssi) {
+                    ap_records[j].rssi = ap_records[i].rssi;
+                }
+                break;
+            }
+        }
+        if (!dup) {
+            if (unique_count != i) {
+                ap_records[unique_count] = ap_records[i];
+            }
+            unique_count++;
+        }
+    }
+
     /* Build JSON array */
-    char *json = malloc(ap_count * 80 + 4);
+    char *json = malloc(unique_count * 80 + 4);
     if (!json) {
         free(ap_records);
         httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Out of memory");
@@ -121,7 +175,7 @@ static esp_err_t scan_handler(httpd_req_t *req)
 
     char *p = json;
     *p++ = '[';
-    for (int i = 0; i < ap_count; i++) {
+    for (int i = 0; i < unique_count; i++) {
         if (i > 0) *p++ = ',';
         p += sprintf(p, "{\"ssid\":\"%s\",\"rssi\":%d}",
                      (char *)ap_records[i].ssid, ap_records[i].rssi);
@@ -162,16 +216,14 @@ static esp_err_t save_handler(httpd_req_t *req)
     char *ssid_end = strchr(ssid_start, '&');
     size_t ssid_len = ssid_end ? (size_t)(ssid_end - ssid_start)
                                : strlen(ssid_start);
-    if (ssid_len >= sizeof(creds.ssid)) ssid_len = sizeof(creds.ssid) - 1;
-    memcpy(creds.ssid, ssid_start, ssid_len);
+    url_decode(creds.ssid, sizeof(creds.ssid), ssid_start, ssid_len);
 
     if (pass_start) {
         pass_start += 9; /* skip "password=" */
         char *pass_end = strchr(pass_start, '&');
         size_t pass_len = pass_end ? (size_t)(pass_end - pass_start)
                                    : strlen(pass_start);
-        if (pass_len >= sizeof(creds.password)) pass_len = sizeof(creds.password) - 1;
-        memcpy(creds.password, pass_start, pass_len);
+        url_decode(creds.password, sizeof(creds.password), pass_start, pass_len);
     }
 
     ESP_LOGI(TAG, "Received credentials – SSID: \"%s\"", creds.ssid);
@@ -244,16 +296,22 @@ esp_err_t http_server_start(uint16_t port)
         .method  = HTTP_POST,
         .handler = save_handler,
     };
-    const httpd_uri_t uri_catch_all = {
+    const httpd_uri_t uri_catch_all_get = {
         .uri     = "/*",
         .method  = HTTP_GET,
+        .handler = redirect_handler,
+    };
+    const httpd_uri_t uri_catch_all_post = {
+        .uri     = "/*",
+        .method  = HTTP_POST,
         .handler = redirect_handler,
     };
 
     httpd_register_uri_handler(s_server, &uri_root);
     httpd_register_uri_handler(s_server, &uri_scan);
     httpd_register_uri_handler(s_server, &uri_save);
-    httpd_register_uri_handler(s_server, &uri_catch_all);
+    httpd_register_uri_handler(s_server, &uri_catch_all_get);
+    httpd_register_uri_handler(s_server, &uri_catch_all_post);
 
     ESP_LOGI(TAG, "HTTP server started on port %d", port);
     return ESP_OK;
