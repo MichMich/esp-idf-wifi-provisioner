@@ -30,51 +30,10 @@ typedef struct {
     char password[65];
 } wifi_prov_creds_t;
 
-/* ── HTML page ──────────────────────────────────────────────────────── */
+/* ── Embedded HTML (see src/portal.html) ─────────────────────────────── */
 
-static const char PORTAL_HTML[] =
-    "<!DOCTYPE html>"
-    "<html><head>"
-    "<meta name='viewport' content='width=device-width,initial-scale=1'>"
-    "<title>WiFi Setup</title>"
-    "<style>"
-    "body{font-family:sans-serif;margin:0;padding:20px;background:#f5f5f5}"
-    ".c{max-width:400px;margin:0 auto;background:#fff;padding:20px;border-radius:8px;"
-    "box-shadow:0 2px 8px rgba(0,0,0,.1)}"
-    "h1{margin-top:0;font-size:1.4em;color:#333}"
-    "label{display:block;margin:12px 0 4px;font-size:.9em;color:#555}"
-    "input[type=text],input[type=password],select{"
-    "width:100%%;box-sizing:border-box;padding:10px;border:1px solid #ccc;"
-    "border-radius:4px;font-size:1em}"
-    "button{margin-top:16px;width:100%%;padding:12px;background:#2196F3;color:#fff;"
-    "border:none;border-radius:4px;font-size:1em;cursor:pointer}"
-    "button:hover{background:#1976D2}"
-    ".net{padding:8px 12px;margin:4px 0;background:#f9f9f9;border-radius:4px;"
-    "cursor:pointer;display:flex;justify-content:space-between}"
-    ".net:hover{background:#e3f2fd}"
-    ".rssi{color:#999;font-size:.85em}"
-    "</style></head><body>"
-    "<div class='c'>"
-    "<h1>WiFi Setup</h1>"
-    "<div id='nets'>Scanning for networks&hellip;</div>"
-    "<form method='POST' action='/save'>"
-    "<label for='s'>SSID</label>"
-    "<input type='text' id='s' name='ssid' required maxlength='32'>"
-    "<label for='p'>Password</label>"
-    "<input type='password' id='p' name='password' maxlength='64'>"
-    "<button type='submit'>Connect</button>"
-    "</form></div>"
-    "<script>"
-    "fetch('/scan').then(r=>r.json()).then(d=>{"
-    "let h='';"
-    "d.forEach(n=>{"
-    "h+='<div class=\"net\" onclick=\"document.getElementById(\\'s\\').value=\\''+n.ssid+'\\';\">'+"
-    "n.ssid+'<span class=\"rssi\">'+n.rssi+' dBm</span></div>';"
-    "});"
-    "document.getElementById('nets').innerHTML=h||'No networks found.';"
-    "}).catch(()=>{document.getElementById('nets').innerHTML='Scan failed.';});"
-    "</script>"
-    "</body></html>";
+extern const uint8_t portal_html_start[] asm("_binary_portal_html_start");
+extern const uint8_t portal_html_end[]   asm("_binary_portal_html_end");
 
 /* ── URL decoding ───────────────────────────────────────────────────── */
 
@@ -113,7 +72,8 @@ static void url_decode(char *dst, size_t dst_len, const char *src, size_t src_le
 static esp_err_t root_handler(httpd_req_t *req)
 {
     httpd_resp_set_type(req, "text/html");
-    return httpd_resp_send(req, PORTAL_HTML, HTTPD_RESP_USE_STRLEN);
+    const size_t len = portal_html_end - portal_html_start;
+    return httpd_resp_send(req, (const char *)portal_html_start, len);
 }
 
 static esp_err_t scan_handler(httpd_req_t *req)
