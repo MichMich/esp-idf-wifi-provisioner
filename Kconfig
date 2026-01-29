@@ -1,0 +1,53 @@
+menu "WiFi Provisioner"
+
+    config WIFI_PROV_AP_SSID
+        string "Default AP SSID"
+        default "ESP-Provision"
+        help
+            Default SSID for the provisioning access point.
+
+    config WIFI_PROV_AP_PASSWORD
+        string "Default AP password"
+        default ""
+        help
+            Default password for the provisioning access point.
+            Leave empty for an open network.
+
+    config WIFI_PROV_AP_CHANNEL
+        int "AP channel"
+        default 1
+        range 1 13
+        help
+            WiFi channel for the provisioning access point.
+
+    config WIFI_PROV_AP_MAX_CONNECTIONS
+        int "AP max connections"
+        default 4
+        range 1 10
+        help
+            Maximum number of simultaneous station connections to the AP.
+
+    config WIFI_PROV_STA_MAX_RETRIES
+        int "STA max connection retries"
+        default 5
+        range 1 255
+        help
+            Number of times to retry connecting to a stored network
+            before falling back to AP provisioning mode.
+
+    config WIFI_PROV_PORTAL_TIMEOUT
+        int "Portal timeout (seconds)"
+        default 180
+        range 0 3600
+        help
+            Time in seconds before the captive portal shuts down
+            if no client connects. Set to 0 to disable the timeout.
+
+    config WIFI_PROV_HTTP_PORT
+        int "HTTP server port"
+        default 80
+        range 1 65535
+        help
+            Port for the captive portal HTTP server.
+
+endmenu

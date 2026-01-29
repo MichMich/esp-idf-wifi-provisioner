@@ -1,0 +1,18 @@
+idf_component_register(
+    SRCS
+        "src/wifi_provisioner.c"
+        "src/wifi_sta.c"
+        "src/wifi_ap.c"
+        "src/http_server.c"
+        "src/dns_server.c"
+        "src/nvs_store.c"
+    INCLUDE_DIRS
+        "include"
+    REQUIRES
+        nvs_flash
+        esp_wifi
+        esp_netif
+        esp_http_server
+        esp_event
+        lwip
+)

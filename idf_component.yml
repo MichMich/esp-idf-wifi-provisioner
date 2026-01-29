@@ -1,0 +1,13 @@
+version: "0.1.0"
+description: "Automatic WiFi connection management with captive portal fallback for ESP-IDF"
+url: "https://github.com/MichMich/esp-idf-wifi-provisioner"
+repository: "https://github.com/MichMich/esp-idf-wifi-provisioner.git"
+targets:
+  - esp32
+  - esp32s2
+  - esp32s3
+  - esp32c3
+  - esp32c6
+dependencies:
+  idf:
+    version: ">=5.0.0"
