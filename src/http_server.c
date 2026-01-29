@@ -32,8 +32,10 @@ typedef struct {
 
 /* ── Embedded HTML (see src/portal.html) ─────────────────────────────── */
 
-extern const uint8_t portal_html_start[] asm("_binary_portal_html_start");
-extern const uint8_t portal_html_end[]   asm("_binary_portal_html_end");
+extern const uint8_t portal_html_start[]    asm("_binary_portal_html_start");
+extern const uint8_t portal_html_end[]      asm("_binary_portal_html_end");
+extern const uint8_t connected_html_start[] asm("_binary_connected_html_start");
+extern const uint8_t connected_html_end[]   asm("_binary_connected_html_end");
 
 /* ── URL decoding ───────────────────────────────────────────────────── */
 
@@ -192,20 +194,9 @@ static esp_err_t save_handler(httpd_req_t *req)
     nvs_store_save(creds.ssid, creds.password);
 
     /* Send confirmation page */
-    const char *resp =
-        "<!DOCTYPE html><html><head>"
-        "<meta name='viewport' content='width=device-width,initial-scale=1'>"
-        "<title>WiFi Setup</title>"
-        "<style>body{font-family:sans-serif;margin:0;padding:20px;background:#f5f5f5}"
-        ".c{max-width:400px;margin:0 auto;background:#fff;padding:20px;"
-        "border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);text-align:center}"
-        "</style></head><body><div class='c'>"
-        "<h1>Saved!</h1>"
-        "<p>Connecting to the network. You can close this page.</p>"
-        "</div></body></html>";
-
     httpd_resp_set_type(req, "text/html");
-    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
+    const size_t len = connected_html_end - connected_html_start;
+    httpd_resp_send(req, (const char *)connected_html_start, len);
 
     /* Post event so the orchestrator can restart in STA mode */
     esp_event_post(WIFI_PROV_EVENT, WIFI_PROV_EVENT_CREDENTIALS_SET,

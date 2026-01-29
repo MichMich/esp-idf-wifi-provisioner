@@ -85,7 +85,7 @@
         fetch('/scan').then(r => r.json()).then(d => {
             let h = '';
             d.forEach(n => {
-                h += '<div class="net" onclick="document.getElementById(\'s\').value=\'' + n.ssid + '\';">'
+                h += '<div class="net" onclick="document.getElementById(\'s\').value=\'' + n.ssid + '\';document.getElementById(\'p\').focus();">'
                    + n.ssid + '<span class="rssi">' + n.rssi + ' dBm</span></div>';
             });
             document.getElementById('nets').innerHTML = h || 'No networks found.';

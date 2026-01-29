@@ -53,10 +53,17 @@ typedef struct {
 }
 
 /**
+ * Initialise NVS, netif and the default event loop.
+ * Call once from app_main() before wifi_prov_start().
+ */
+esp_err_t wifi_prov_init(void);
+
+/**
  * Start the WiFi provisioner.
  *
- * Initialises the WiFi driver, reads stored credentials from NVS and
- * attempts to connect.  Falls back to AP + captive portal on failure.
+ * Reads stored credentials from NVS and attempts to connect.
+ * Falls back to AP + captive portal on failure.
+ * Requires wifi_prov_init() to have been called first.
  */
 esp_err_t wifi_prov_start(const wifi_prov_config_t *config);
 

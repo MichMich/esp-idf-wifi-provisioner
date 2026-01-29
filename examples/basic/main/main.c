@@ -6,7 +6,6 @@
  */
 
 #include <stdio.h>
-#include "nvs_flash.h"
 #include "esp_log.h"
 #include "wifi_provisioner.h"
 
@@ -24,13 +23,8 @@ static void on_portal_start(void)
 
 void app_main(void)
 {
-    /* Initialise NVS — required for credential storage */
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
+    /* Initialise NVS, netif and default event loop */
+    ESP_ERROR_CHECK(wifi_prov_init());
 
     /* Configure the provisioner */
     wifi_prov_config_t config = WIFI_PROV_DEFAULT_CONFIG();
