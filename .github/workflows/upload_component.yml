@@ -2,6 +2,8 @@ name: Push component to ESP-IDF Component Registry
 
 on:
   push:
+    branches:
+      - main
     tags:
       - v*
 
