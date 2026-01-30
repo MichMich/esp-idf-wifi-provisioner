@@ -40,5 +40,5 @@ esp_err_t dns_server_stop(void);
 
 /* ── HTTP server ────────────────────────────────────────────────────── */
 
-esp_err_t http_server_start(uint16_t port);
+esp_err_t http_server_start(uint16_t port, const wifi_prov_config_t *config);
 esp_err_t http_server_stop(void);

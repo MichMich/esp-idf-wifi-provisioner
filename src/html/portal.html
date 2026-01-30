@@ -2,152 +2,13 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>WiFi Setup</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: #f1f5f9;
-        }
-        .c {
-            max-width: 400px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.1);
-        }
-        h1 {
-            margin-top: 0;
-            font-size: 1.4em;
-            color: #1e293b;
-        }
-        label {
-            display: block;
-            margin: 12px 0 4px;
-            font-size: .9em;
-            color: #64748b;
-        }
-        input[type=text] {
-            width: 100%;
-            box-sizing: border-box;
-            padding: 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            font-size: 1em;
-        }
-        button {
-            margin-top: 16px;
-            width: 100%;
-            padding: 12px;
-            background: #3b82f6;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            font-size: 0.75em;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-weight:bold;
-            letter-spacing: 10%;
-            box-shadow: 0 2px 8px rgba(0,0,0,.1);
-        }
-        button:hover {
-            background: #2563eb;
-        }
-        #nets {
-            max-height: 250px;
-            overflow-y: auto;
-            margin-bottom: 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            background: #e2e8f0;
-            margin-bottom: 2rem;
-            font-size: 0.9em;
-            color: #64748b;
-            box-shadow: 0 2px 8px rgba(0,0,0,.025);
-        }
-        #scanning {
-            background: #f8fafc;
-            padding: 8px 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-
-        }
-        .spinner {
-            width: 12px;
-            height: 12px;
-            border: 2px solid #94a3b8;
-            border-top: 2px solid transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to   { transform: rotate(360deg); }
-        }
-        .net {
-            padding: 12px 12px;
-            
-            background: #f8fafc;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1px;
-            font-size: 0.9em;
-            color: #334155;
-            
-        }
-        .net:last-child {
-            margin-bottom: 0;
-        }
-        .net:hover {
-            background: #dbeafe;
-        }
-        .ssid {
-            max-width: 80%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .icons {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-shrink: 0;
-        }
-        .lock {
-            width: 12px;
-            height: 12px;
-            fill: #94a3b8;
-        }
-        .net:hover .lock {
-            fill: #475569;
-        }
-        .bars {
-            width: 18px;
-            height: 14px;
-        }
-        .bar-on {
-            fill: #94a3b8;
-        }
-        .bar-off {
-            fill: #e2e8f0;
-        }
-        .net:hover .bar-on {
-            fill: #475569;
-        }
-        .net:hover .bar-off {
-            fill: #cbd5e1;
-        }
-
-    </style>
+    <title></title>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <div class="c">
-        <h1>WiFi Setup</h1>
+    <div class="c" style="display:none">
+        <h1 id="hdr"></h1>
+        <p id="sub"></p>
         <div id="nets"><div id="scanning"><div>Scanning for networks&hellip;</div><div class="spinner"></div></div></div>
         <form method="POST" action="/save" autocomplete="off">
             <label for="s">SSID</label>
@@ -157,6 +18,7 @@
             <button type="submit">Connect</button>
         </form>
     </div>
+    <p id="ftr" class="footer"></p>
     <script>
         function bars(rssi) {
             var a = rssi >= -50 ? 5 : rssi >= -60 ? 4 : rssi >= -70 ? 3 : rssi >= -80 ? 2 : 1;
@@ -169,6 +31,21 @@
                 + '<rect class="' + b(5) + '" x="16" y="0"   width="3" rx="0.5" height="14"/>'
                 + '</svg>';
         }
+        fetch('/config').then(r => r.json()).then(cfg => {
+            document.title = cfg.title;
+            document.getElementById('hdr').textContent = cfg.portal_header;
+            if (cfg.portal_subheader) {
+                document.getElementById('sub').innerHTML = cfg.portal_subheader;
+            } else {
+                document.getElementById('sub').remove();
+            }
+            if (cfg.footer) {
+                document.getElementById('ftr').innerHTML = cfg.footer;
+            } else {
+                document.getElementById('ftr').remove();
+            }
+            document.querySelector('.c').style.display = '';
+        });
         fetch('/scan').then(r => r.json()).then(d => {
             let h = '';
             d.forEach(n => {

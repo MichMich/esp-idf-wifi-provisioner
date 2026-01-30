@@ -73,6 +73,7 @@ Use `idf.py menuconfig` under **Component config > WiFi Provisioner** to set def
 - Connection timeout
 - Maximum STA retry count
 - Portal HTTP port
+- Page title, portal header/subheader, connected header/subheader, footer
 
 Or configure at runtime via `wifi_prov_config_t`:
 
@@ -84,6 +85,14 @@ config.max_retries    = 5;
 config.portal_timeout = 180;           // seconds, 0 = no timeout
 config.on_connected   = my_connected_cb;
 config.on_portal_start = my_portal_cb;
+
+// Customise page text (HTML entities supported)
+config.page_title          = "Device Setup";
+config.portal_header       = "Connect to WiFi";
+config.portal_subheader    = "Select your network below.";
+config.connected_header    = "Done!";
+config.connected_subheader = "Your device is now connected.";
+config.page_footer         = "&copy; 2026 My Company";
 ```
 
 ## API Reference
@@ -115,6 +124,7 @@ esp-idf-wifi-provisioner/
     dns_server.c            DNS redirect for captive portal
     nvs_store.c             NVS read/write helpers
     html/
+      style.css             Shared stylesheet
       portal.html           Captive portal page
       connected.html        Confirmation page
   docs/

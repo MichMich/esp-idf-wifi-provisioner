@@ -15,6 +15,7 @@
 static const char *TAG = "wifi_prov_http";
 
 static httpd_handle_t s_server = NULL;
+static const wifi_prov_config_t *s_page_config = NULL;
 
 /* ── Event posted when the user submits credentials ─────────────────── */
 
@@ -32,6 +33,8 @@ typedef struct {
 
 /* ── Embedded HTML (see src/portal.html) ─────────────────────────────── */
 
+extern const uint8_t style_css_start[]      asm("_binary_style_css_start");
+extern const uint8_t style_css_end[]        asm("_binary_style_css_end");
 extern const uint8_t portal_html_start[]    asm("_binary_portal_html_start");
 extern const uint8_t portal_html_end[]      asm("_binary_portal_html_end");
 extern const uint8_t connected_html_start[] asm("_binary_connected_html_start");
@@ -70,6 +73,34 @@ static void url_decode(char *dst, size_t dst_len, const char *src, size_t src_le
 }
 
 /* ── Handlers ───────────────────────────────────────────────────────── */
+
+static esp_err_t style_handler(httpd_req_t *req)
+{
+    httpd_resp_set_type(req, "text/css");
+    const size_t len = style_css_end - style_css_start;
+    return httpd_resp_send(req, (const char *)style_css_start, len);
+}
+
+static esp_err_t config_handler(httpd_req_t *req)
+{
+    char json[512];
+    snprintf(json, sizeof(json),
+             "{\"title\":\"%s\","
+             "\"portal_header\":\"%s\","
+             "\"portal_subheader\":\"%s\","
+             "\"connected_header\":\"%s\","
+             "\"connected_subheader\":\"%s\","
+             "\"footer\":\"%s\"}",
+             s_page_config->page_title,
+             s_page_config->portal_header,
+             s_page_config->portal_subheader,
+             s_page_config->connected_header,
+             s_page_config->connected_subheader,
+             s_page_config->page_footer);
+
+    httpd_resp_set_type(req, "application/json");
+    return httpd_resp_send(req, json, HTTPD_RESP_USE_STRLEN);
+}
 
 static esp_err_t root_handler(httpd_req_t *req)
 {
@@ -216,11 +247,13 @@ static esp_err_t redirect_handler(httpd_req_t *req)
 
 /* ── Start / Stop ───────────────────────────────────────────────────── */
 
-esp_err_t http_server_start(uint16_t port)
+esp_err_t http_server_start(uint16_t port, const wifi_prov_config_t *page_config)
 {
     if (s_server) {
         return ESP_ERR_INVALID_STATE;
     }
+
+    s_page_config = page_config;
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.server_port     = port;
@@ -248,6 +281,16 @@ esp_err_t http_server_start(uint16_t port)
         .method  = HTTP_POST,
         .handler = save_handler,
     };
+    const httpd_uri_t uri_style = {
+        .uri     = "/style.css",
+        .method  = HTTP_GET,
+        .handler = style_handler,
+    };
+    const httpd_uri_t uri_config = {
+        .uri     = "/config",
+        .method  = HTTP_GET,
+        .handler = config_handler,
+    };
     const httpd_uri_t uri_catch_all_get = {
         .uri     = "/*",
         .method  = HTTP_GET,
@@ -260,6 +303,8 @@ esp_err_t http_server_start(uint16_t port)
     };
 
     httpd_register_uri_handler(s_server, &uri_root);
+    httpd_register_uri_handler(s_server, &uri_style);
+    httpd_register_uri_handler(s_server, &uri_config);
     httpd_register_uri_handler(s_server, &uri_scan);
     httpd_register_uri_handler(s_server, &uri_save);
     httpd_register_uri_handler(s_server, &uri_catch_all_get);

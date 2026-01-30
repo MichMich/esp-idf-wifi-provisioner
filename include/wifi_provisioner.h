@@ -36,6 +36,12 @@ typedef struct {
     uint8_t     max_retries;
     uint16_t    portal_timeout;          /* seconds, 0 = no timeout */
     uint16_t    http_port;
+    const char *page_title;
+    const char *portal_header;
+    const char *portal_subheader;
+    const char *connected_header;
+    const char *connected_subheader;
+    const char *page_footer;
     wifi_prov_on_connected_cb_t    on_connected;
     wifi_prov_on_portal_start_cb_t on_portal_start;
 } wifi_prov_config_t;
@@ -48,6 +54,12 @@ typedef struct {
     .max_retries       = CONFIG_WIFI_PROV_STA_MAX_RETRIES,                  \
     .portal_timeout    = CONFIG_WIFI_PROV_PORTAL_TIMEOUT,                   \
     .http_port         = CONFIG_WIFI_PROV_HTTP_PORT,                        \
+    .page_title        = CONFIG_WIFI_PROV_PAGE_TITLE,                      \
+    .portal_header     = CONFIG_WIFI_PROV_PORTAL_HEADER,                   \
+    .portal_subheader  = CONFIG_WIFI_PROV_PORTAL_SUBHEADER,                \
+    .connected_header  = CONFIG_WIFI_PROV_CONNECTED_HEADER,                \
+    .connected_subheader = CONFIG_WIFI_PROV_CONNECTED_SUBHEADER,           \
+    .page_footer       = CONFIG_WIFI_PROV_PAGE_FOOTER,                     \
     .on_connected      = NULL,                                              \
     .on_portal_start   = NULL,                                              \
 }

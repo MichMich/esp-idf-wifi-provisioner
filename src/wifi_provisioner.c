@@ -64,7 +64,7 @@ static void on_credentials_set(void *arg, esp_event_base_t base,
         esp_wifi_init(&cfg);
         wifi_ap_start(&s_config);
         dns_server_start();
-        http_server_start(s_config.http_port);
+        http_server_start(s_config.http_port, &s_config);
     }
 }
 
@@ -142,7 +142,7 @@ esp_err_t wifi_prov_start(const wifi_prov_config_t *config)
 
     wifi_ap_start(&s_config);
     dns_server_start();
-    http_server_start(s_config.http_port);
+    http_server_start(s_config.http_port, &s_config);
 
     if (s_config.on_portal_start) {
         s_config.on_portal_start();

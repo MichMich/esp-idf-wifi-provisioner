@@ -31,6 +31,25 @@ Edit `scan/index.html` to change the test data:
 
 The `scan/` directory is in `.gitignore` and will not be committed.
 
+## Dummy config data
+
+The `config/` directory contains an `index.html` with mock page configuration. When the portal or connected page fetches `/config`, the local server resolves it to `config/index.html`.
+
+Edit `config/index.html` to change the test data:
+
+```json
+{
+    "title": "WiFi Setup",
+    "portal_header": "WiFi Setup",
+    "portal_subheader": "Select your network to get started.",
+    "connected_header": "Saved!",
+    "connected_subheader": "Connecting to the network. You can close this page.",
+    "footer": "&copy; 2026"
+}
+```
+
+The `config/` directory is in `.gitignore` and will not be committed.
+
 ## Pages
 
 - **portal.html** — Main WiFi setup page (network list, SSID/password form)

@@ -2,37 +2,31 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>WiFi Setup</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: #f1f5f9;
-        }
-        .c {
-            max-width: 400px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.1);
-            text-align: center;
-        }
-        h1 {
-            color: #1e293b;
-            margin: 0;
-        }
-        p {
-            margin: 0.5rem 0;
-            color: #64748b;
-        }
-    </style>
+    <title></title>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <div class="c">
-        <h1>Saved!</h1>
-        <p>Connecting to the network. You can close this page.</p>
+    <div class="c" style="display:none;text-align:center">
+        <h1 id="hdr"></h1>
+        <p id="sub"></p>
     </div>
+    <p id="ftr" class="footer"></p>
+    <script>
+        fetch('/config').then(r => r.json()).then(cfg => {
+            document.title = cfg.title;
+            document.getElementById('hdr').textContent = cfg.connected_header;
+            if (cfg.connected_subheader) {
+                document.getElementById('sub').innerHTML = cfg.connected_subheader;
+            } else {
+                document.getElementById('sub').remove();
+            }
+            if (cfg.footer) {
+                document.getElementById('ftr').innerHTML = cfg.footer;
+            } else {
+                document.getElementById('ftr').remove();
+            }
+            document.querySelector('.c').style.display = '';
+        });
+    </script>
 </body>
 </html>

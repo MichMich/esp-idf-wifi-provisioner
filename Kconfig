@@ -50,4 +50,41 @@ menu "WiFi Provisioner"
         help
             Port for the captive portal HTTP server.
 
+    config WIFI_PROV_PAGE_TITLE
+        string "Page title"
+        default "WiFi Setup"
+        help
+            Title shown in the browser tab for both portal and connected pages.
+
+    config WIFI_PROV_PORTAL_HEADER
+        string "Portal header"
+        default "WiFi Setup"
+        help
+            Main heading on the captive portal page.
+
+    config WIFI_PROV_PORTAL_SUBHEADER
+        string "Portal subheader"
+        default "Please connect to your WiFi network."
+        help
+            Subheading text below the portal header.
+
+    config WIFI_PROV_CONNECTED_HEADER
+        string "Connected header"
+        default "Saved!"
+        help
+            Main heading on the connected confirmation page.
+
+    config WIFI_PROV_CONNECTED_SUBHEADER
+        string "Connected subheader"
+        default "Connecting to the network. You can close this page."
+        help
+            Subheading text below the connected header.
+
+    config WIFI_PROV_PAGE_FOOTER
+        string "Page footer"
+        default "&copy; 2026"
+        help
+            Footer text shown at the bottom of both pages.
+            Supports HTML entities.
+
 endmenu
