@@ -117,6 +117,11 @@ esp-idf-wifi-provisioner/
     http_server.c           Captive portal web server
     dns_server.c            DNS redirect for captive portal
     nvs_store.c             NVS read/write helpers
+    html/
+      portal.html           Captive portal page
+      connected.html        Confirmation page
+  docs/
+    example.png             Screenshot for README
   examples/
     basic/                  Minimal usage example
 ```
