@@ -139,8 +139,9 @@ static esp_err_t scan_handler(httpd_req_t *req)
     *p++ = '[';
     for (int i = 0; i < unique_count; i++) {
         if (i > 0) *p++ = ',';
-        p += sprintf(p, "{\"ssid\":\"%s\",\"rssi\":%d}",
-                     (char *)ap_records[i].ssid, ap_records[i].rssi);
+        p += sprintf(p, "{\"ssid\":\"%s\",\"rssi\":%d,\"auth\":%d}",
+                     (char *)ap_records[i].ssid, ap_records[i].rssi,
+                     ap_records[i].authmode);
     }
     *p++ = ']';
     *p   = '\0';
