@@ -54,9 +54,6 @@ git clone https://github.com/MichMich/esp-idf-wifi-provisioner.git
 
 void app_main(void)
 {
-    // Initialise NVS, netif and default event loop
-    ESP_ERROR_CHECK(wifi_prov_init());
-
     // Configure and start the provisioner
     wifi_prov_config_t config = WIFI_PROV_DEFAULT_CONFIG();
     config.ap_ssid = "MyDevice-Setup";
@@ -93,7 +90,7 @@ config.on_portal_start = my_portal_cb;
 
 | Function | Description |
 |---|---|
-| `wifi_prov_init()` | Initialise NVS, netif and the default event loop |
+| `wifi_prov_init()` | Initialise NVS, netif and the default event loop (called automatically) |
 | `wifi_prov_start(config)` | Start the connect-or-provision flow |
 | `wifi_prov_stop()` | Tear down AP, HTTP server, and DNS server |
 | `wifi_prov_wait_for_connection(timeout)` | Block until STA is connected |

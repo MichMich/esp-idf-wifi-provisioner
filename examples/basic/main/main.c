@@ -23,9 +23,6 @@ static void on_portal_start(void)
 
 void app_main(void)
 {
-    /* Initialise NVS, netif and default event loop */
-    ESP_ERROR_CHECK(wifi_prov_init());
-
     /* Configure the provisioner */
     wifi_prov_config_t config = WIFI_PROV_DEFAULT_CONFIG();
     config.ap_ssid        = "MyDevice-Setup";

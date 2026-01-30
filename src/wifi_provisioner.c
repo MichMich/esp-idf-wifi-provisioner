@@ -19,6 +19,7 @@ static wifi_prov_config_t s_config;
 static esp_netif_t       *s_sta_netif = NULL;
 static EventGroupHandle_t s_connected_event;
 static bool               s_connected = false;
+static bool               s_initialized = false;
 
 /* Event base declared/defined in http_server.c */
 ESP_EVENT_DECLARE_BASE(WIFI_PROV_EVENT);
@@ -71,6 +72,10 @@ static void on_credentials_set(void *arg, esp_event_base_t base,
 
 esp_err_t wifi_prov_init(void)
 {
+    if (s_initialized) {
+        return ESP_OK;
+    }
+
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
@@ -81,11 +86,14 @@ esp_err_t wifi_prov_init(void)
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
+    s_initialized = true;
     return ESP_OK;
 }
 
 esp_err_t wifi_prov_start(const wifi_prov_config_t *config)
 {
+    ESP_ERROR_CHECK(wifi_prov_init());
+
     s_config = *config;
     s_connected = false;
     s_connected_event = xEventGroupCreate();
@@ -183,6 +191,7 @@ esp_err_t wifi_prov_wait_for_connection(TickType_t timeout_ticks)
 
 esp_err_t wifi_prov_erase_credentials(void)
 {
+    ESP_ERROR_CHECK(wifi_prov_init());
     return nvs_store_erase();
 }
 
