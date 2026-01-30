@@ -70,13 +70,13 @@ menu "WiFi Provisioner"
 
     config WIFI_PROV_CONNECTED_HEADER
         string "Connected header"
-        default "Saved!"
+        default "Connected!"
         help
             Main heading on the connected confirmation page.
 
     config WIFI_PROV_CONNECTED_SUBHEADER
         string "Connected subheader"
-        default "Connecting to the network. You can close this page."
+        default "You are now connected to the network. You can close this page."
         help
             Subheading text below the connected header.
 

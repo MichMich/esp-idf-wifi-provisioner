@@ -124,9 +124,7 @@ esp-idf-wifi-provisioner/
     dns_server.c            DNS redirect for captive portal
     nvs_store.c             NVS read/write helpers
     html/
-      style.css             Shared stylesheet
       portal.html           Captive portal page
-      connected.html        Confirmation page
   docs/
     example.png             Screenshot for README
   examples/

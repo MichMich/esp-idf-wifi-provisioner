@@ -27,6 +27,7 @@ esp_err_t nvs_store_erase(void);
 
 esp_err_t wifi_sta_connect(const char *ssid, const char *password,
                            uint8_t max_retries);
+esp_err_t wifi_sta_try_connect(const char *ssid, const char *password);
 
 /* ── WiFi AP ────────────────────────────────────────────────────────── */
 

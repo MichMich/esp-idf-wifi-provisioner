@@ -33,12 +33,8 @@ typedef struct {
 
 /* ── Embedded HTML (see src/portal.html) ─────────────────────────────── */
 
-extern const uint8_t style_css_start[]      asm("_binary_style_css_start");
-extern const uint8_t style_css_end[]        asm("_binary_style_css_end");
 extern const uint8_t portal_html_start[]    asm("_binary_portal_html_start");
 extern const uint8_t portal_html_end[]      asm("_binary_portal_html_end");
-extern const uint8_t connected_html_start[] asm("_binary_connected_html_start");
-extern const uint8_t connected_html_end[]   asm("_binary_connected_html_end");
 
 /* ── URL decoding ───────────────────────────────────────────────────── */
 
@@ -73,13 +69,6 @@ static void url_decode(char *dst, size_t dst_len, const char *src, size_t src_le
 }
 
 /* ── Handlers ───────────────────────────────────────────────────────── */
-
-static esp_err_t style_handler(httpd_req_t *req)
-{
-    httpd_resp_set_type(req, "text/css");
-    const size_t len = style_css_end - style_css_start;
-    return httpd_resp_send(req, (const char *)style_css_start, len);
-}
 
 static esp_err_t config_handler(httpd_req_t *req)
 {
@@ -222,17 +211,21 @@ static esp_err_t save_handler(httpd_req_t *req)
 
     ESP_LOGI(TAG, "Received credentials – SSID: \"%s\"", creds.ssid);
 
-    /* Save to NVS */
-    nvs_store_save(creds.ssid, creds.password);
+    /* Try connecting while keeping the AP alive */
+    esp_err_t err = wifi_sta_try_connect(creds.ssid, creds.password);
 
-    /* Send confirmation page */
-    httpd_resp_set_type(req, "text/html");
-    const size_t len = connected_html_end - connected_html_start;
-    httpd_resp_send(req, (const char *)connected_html_start, len);
+    httpd_resp_set_type(req, "application/json");
 
-    /* Post event so the orchestrator can restart in STA mode */
-    esp_event_post(WIFI_PROV_EVENT, WIFI_PROV_EVENT_CREDENTIALS_SET,
-                   &creds, sizeof(creds), pdMS_TO_TICKS(100));
+    if (err == ESP_OK) {
+        nvs_store_save(creds.ssid, creds.password);
+        httpd_resp_send(req, "{\"success\":true}", HTTPD_RESP_USE_STRLEN);
+
+        /* Post event so the orchestrator can switch to STA-only mode */
+        esp_event_post(WIFI_PROV_EVENT, WIFI_PROV_EVENT_CREDENTIALS_SET,
+                       &creds, sizeof(creds), pdMS_TO_TICKS(100));
+    } else {
+        httpd_resp_send(req, "{\"success\":false}", HTTPD_RESP_USE_STRLEN);
+    }
 
     return ESP_OK;
 }
@@ -281,11 +274,6 @@ esp_err_t http_server_start(uint16_t port, const wifi_prov_config_t *page_config
         .method  = HTTP_POST,
         .handler = save_handler,
     };
-    const httpd_uri_t uri_style = {
-        .uri     = "/style.css",
-        .method  = HTTP_GET,
-        .handler = style_handler,
-    };
     const httpd_uri_t uri_config = {
         .uri     = "/config",
         .method  = HTTP_GET,
@@ -303,7 +291,6 @@ esp_err_t http_server_start(uint16_t port, const wifi_prov_config_t *page_config
     };
 
     httpd_register_uri_handler(s_server, &uri_root);
-    httpd_register_uri_handler(s_server, &uri_style);
     httpd_register_uri_handler(s_server, &uri_config);
     httpd_register_uri_handler(s_server, &uri_scan);
     httpd_register_uri_handler(s_server, &uri_save);

@@ -35,36 +35,22 @@ typedef struct {
 static void on_credentials_set(void *arg, esp_event_base_t base,
                                int32_t id, void *data)
 {
-    wifi_prov_creds_t *creds = (wifi_prov_creds_t *)data;
-    ESP_LOGI(TAG, "Credentials received via portal, switching to STA …");
+    ESP_LOGI(TAG, "STA connected via portal, tearing down AP …");
 
-    /* Tear down portal */
+    /* Tear down portal services */
     http_server_stop();
     dns_server_stop();
-    wifi_ap_stop();
 
-    /* Try connecting with the new credentials */
-    s_sta_netif = esp_netif_create_default_wifi_sta();
+    /* Switch from APSTA to STA-only (drops the AP, keeps STA connected) */
+    esp_wifi_set_mode(WIFI_MODE_STA);
 
-    wifi_init_config_t wifi_init = WIFI_INIT_CONFIG_DEFAULT();
-    esp_wifi_init(&wifi_init);
+    /* Get a reference to the STA netif (created by wifi_ap_start in APSTA mode) */
+    s_sta_netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
 
-    esp_err_t err = wifi_sta_connect(creds->ssid, creds->password,
-                                     s_config.max_retries);
-    if (err == ESP_OK) {
-        s_connected = true;
-        xEventGroupSetBits(s_connected_event, CONNECTED_BIT);
-        if (s_config.on_connected) {
-            s_config.on_connected();
-        }
-    } else {
-        ESP_LOGW(TAG, "Connection with new credentials failed, restarting portal");
-        /* Re-launch AP + portal */
-        wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-        esp_wifi_init(&cfg);
-        wifi_ap_start(&s_config);
-        dns_server_start();
-        http_server_start(s_config.http_port, &s_config);
+    s_connected = true;
+    xEventGroupSetBits(s_connected_event, CONNECTED_BIT);
+    if (s_config.on_connected) {
+        s_config.on_connected();
     }
 }
 

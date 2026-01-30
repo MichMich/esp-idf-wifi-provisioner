@@ -16,7 +16,5 @@ idf_component_register(
         esp_event
         lwip
     EMBED_TXTFILES
-        "src/html/style.css"
         "src/html/portal.html"
-        "src/html/connected.html"
 )

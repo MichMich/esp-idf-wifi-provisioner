@@ -1,62 +1,311 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title></title>
-    <link rel="stylesheet" href="/style.css">
-</head>
-<body>
-    <div class="c" style="display:none">
-        <h1 id="hdr"></h1>
-        <p id="sub"></p>
-        <div id="nets"><div id="scanning"><div>Scanning for networks&hellip;</div><div class="spinner"></div></div></div>
-        <form method="POST" action="/save" autocomplete="off">
-            <label for="s">SSID</label>
-            <input type="text" id="s" name="ssid" required maxlength="32" autocomplete="off">
-            <label for="p">Password</label>
-            <input type="text" id="p" name="password" maxlength="64" autocomplete="off">
-            <button type="submit">Connect</button>
-        </form>
-    </div>
-    <p id="ftr" class="footer"></p>
-    <script>
-        function bars(rssi) {
-            var a = rssi >= -50 ? 5 : rssi >= -60 ? 4 : rssi >= -70 ? 3 : rssi >= -80 ? 2 : 1;
-            function b(i) { return a >= i ? 'bar-on' : 'bar-off'; }
-            return '<svg class="bars" viewBox="0 0 20 14">'
-                + '<rect class="' + b(1) + '" x="0"  y="11"  width="3" rx="0.5" height="3"/>'
-                + '<rect class="' + b(2) + '" x="4"  y="8"   width="3" rx="0.5" height="6"/>'
-                + '<rect class="' + b(3) + '" x="8"  y="5.5" width="3" rx="0.5" height="8.5"/>'
-                + '<rect class="' + b(4) + '" x="12" y="3"   width="3" rx="0.5" height="11"/>'
-                + '<rect class="' + b(5) + '" x="16" y="0"   width="3" rx="0.5" height="14"/>'
-                + '</svg>';
-        }
-        fetch('/config').then(r => r.json()).then(cfg => {
-            document.title = cfg.title;
-            document.getElementById('hdr').textContent = cfg.portal_header;
-            if (cfg.portal_subheader) {
-                document.getElementById('sub').innerHTML = cfg.portal_subheader;
-            } else {
-                document.getElementById('sub').remove();
-            }
-            if (cfg.footer) {
-                document.getElementById('ftr').innerHTML = cfg.footer;
-            } else {
-                document.getElementById('ftr').remove();
-            }
-            document.querySelector('.c').style.display = '';
-        });
-        fetch('/scan').then(r => r.json()).then(d => {
-            let h = '';
-            d.forEach(n => {
-                let lock = n.auth > 0 ? '<svg class="lock" viewBox=" 0 0 24 18"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>' : '';
-                h += '<div class="net" onclick="document.getElementById(\'s\').value=\'' + n.ssid + '\';document.getElementById(\'p\').focus();"><span class="ssid">'
-                   + n.ssid + '</span><span class="icons">' + lock + bars(n.rssi) + '</span></div>';
-            });
-            document.getElementById('nets').innerHTML = h || 'No networks found.';
-        }).catch(() => {
-            document.getElementById('scanning').innerHTML = 'Scan failed!';
-        });
-    </script>
-</body>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title></title>
+		<style>
+			body {
+				font-family: sans-serif;
+				margin: 0;
+				padding: 20px;
+				background: #f1f5f9;
+			}
+			.c {
+				max-width: 400px;
+				margin: 0 auto;
+				background: #fff;
+				padding: 20px;
+				border-radius: 8px;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+			}
+			h1 {
+				margin: 0;
+				font-size: 1.4em;
+				color: #1e293b;
+				text-align: center;
+			}
+			p {
+				font-size: 0.9rem;
+				margin: 0.25rem 0 0 0;
+				color: #64748b;
+				text-align: center;
+				text-wrap: balance;
+				line-height: 1.25rem;
+			}
+			.error {
+				color: #dc2626;
+				background-color: #ffe2e2;
+				font-size: 0.75em;
+				margin-top: 14px;
+				text-wrap: balance;
+				border-radius: 4px;
+				padding: 0.5rem;
+				text-align: center;
+			}
+			.footer {
+				margin-top: 0.75rem;
+				font-size: 0.75em;
+				color: #94a3b8;
+			}
+			label {
+				display: block;
+				margin: 12px 0 4px;
+				font-size: 0.9em;
+				color: #64748b;
+			}
+			input[type='text'] {
+				width: 100%;
+				box-sizing: border-box;
+				padding: 10px;
+				border: 1px solid #cbd5e1;
+				border-radius: 4px;
+				font-size: 1em;
+			}
+			button {
+				margin-top: 16px;
+				width: 100%;
+				padding: 12px;
+				background: #3b82f6;
+				color: #fff;
+				border: none;
+				border-radius: 4px;
+				font-size: 0.75em;
+				cursor: pointer;
+				text-transform: uppercase;
+				font-weight: bold;
+				letter-spacing: 10%;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+			}
+			button:hover {
+				background: #2563eb;
+			}
+			#nets {
+				max-height: 250px;
+				overflow-y: auto;
+				margin-top: 1.5rem;
+				margin-bottom: 1rem;
+				border: 1px solid #cbd5e1;
+				border-radius: 4px;
+				background: #e2e8f0;
+				margin-bottom: 2rem;
+				font-size: 0.9em;
+				color: #64748b;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.025);
+			}
+			#scanning {
+				background: #f8fafc;
+				padding: 8px 12px;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+			.spinner {
+				width: 12px;
+				height: 12px;
+				border: 2px solid #94a3b8;
+				border-top: 2px solid transparent;
+				border-radius: 50%;
+				animation: spin 1s linear infinite;
+			}
+			@keyframes spin {
+				from {
+					transform: rotate(0deg);
+				}
+				to {
+					transform: rotate(360deg);
+				}
+			}
+			.net {
+				padding: 12px 12px;
+				background: #f8fafc;
+				cursor: pointer;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 1px;
+				font-size: 0.9em;
+				color: #334155;
+			}
+			.net:last-child {
+				margin-bottom: 0;
+			}
+			.net:hover {
+				background: #dbeafe;
+			}
+			.ssid {
+				max-width: 80%;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+			.icons {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				flex-shrink: 0;
+			}
+			.lock {
+				width: 12px;
+				height: 12px;
+				fill: #94a3b8;
+			}
+			.net:hover .lock {
+				fill: #475569;
+			}
+			.bars {
+				width: 18px;
+				height: 14px;
+			}
+			.bar-on {
+				fill: #94a3b8;
+			}
+			.bar-off {
+				fill: #e2e8f0;
+			}
+			.net:hover .bar-on {
+				fill: #475569;
+			}
+			.net:hover .bar-off {
+				fill: #cbd5e1;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="c" style="display: none">
+			<h1 id="hdr"></h1>
+			<p id="sub"></p>
+			<div id="portal">
+				<div id="nets">
+					<div id="scanning">
+						<div>Scanning for networks&hellip;</div>
+						<div class="spinner"></div>
+					</div>
+				</div>
+				<form id="frm" autocomplete="off">
+					<label for="s">SSID</label>
+					<input type="text" id="s" name="ssid" required maxlength="32" autocomplete="off" />
+					<label for="p">Password</label>
+					<input type="text" id="p" name="password" maxlength="64" autocomplete="off" />
+					<div id="err" class="error" style="display: none"></div>
+					<button type="submit" id="btn">Connect</button>
+				</form>
+			</div>
+			<div id="done" style="display: none; text-align: center">
+				<h1 id="done-hdr"></h1>
+				<p id="done-sub"></p>
+			</div>
+		</div>
+		<p id="ftr" class="footer"></p>
+		<script>
+			var cfg
+			function bars(rssi) {
+				var a = rssi >= -50 ? 5 : rssi >= -60 ? 4 : rssi >= -70 ? 3 : rssi >= -80 ? 2 : 1
+				function b(i) {
+					return a >= i ? 'bar-on' : 'bar-off'
+				}
+				return (
+					'<svg class="bars" viewBox="0 0 20 14">' +
+					'<rect class="' +
+					b(1) +
+					'" x="0"  y="11"  width="3" rx="0.5" height="3"/>' +
+					'<rect class="' +
+					b(2) +
+					'" x="4"  y="8"   width="3" rx="0.5" height="6"/>' +
+					'<rect class="' +
+					b(3) +
+					'" x="8"  y="5.5" width="3" rx="0.5" height="8.5"/>' +
+					'<rect class="' +
+					b(4) +
+					'" x="12" y="3"   width="3" rx="0.5" height="11"/>' +
+					'<rect class="' +
+					b(5) +
+					'" x="16" y="0"   width="3" rx="0.5" height="14"/>' +
+					'</svg>'
+				)
+			}
+			fetch('/config')
+				.then((r) => r.json())
+				.then((c) => {
+					cfg = c
+					document.title = cfg.title
+					document.getElementById('hdr').textContent = cfg.portal_header
+					if (cfg.portal_subheader) {
+						document.getElementById('sub').innerHTML = cfg.portal_subheader
+					} else {
+						document.getElementById('sub').remove()
+					}
+					if (cfg.footer) {
+						document.getElementById('ftr').innerHTML = cfg.footer
+					} else {
+						document.getElementById('ftr').remove()
+					}
+					document.querySelector('.c').style.display = ''
+				})
+			fetch('/scan')
+				.then((r) => r.json())
+				.then((d) => {
+					let h = ''
+					d.forEach((n) => {
+						let lock =
+							n.auth > 0
+								? '<svg class="lock" viewBox=" 0 0 24 18"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>'
+								: ''
+						h +=
+							'<div class="net" onclick="document.getElementById(\'s\').value=\'' +
+							n.ssid +
+							'\';document.getElementById(\'p\').focus();"><span class="ssid">' +
+							n.ssid +
+							'</span><span class="icons">' +
+							lock +
+							bars(n.rssi) +
+							'</span></div>'
+					})
+					document.getElementById('nets').innerHTML = h || 'No networks found.'
+				})
+				.catch(() => {
+					document.getElementById('scanning').innerHTML = 'Scan failed!'
+				})
+			document.getElementById('frm').addEventListener('submit', function (e) {
+				e.preventDefault()
+				var btn = document.getElementById('btn')
+				var err = document.getElementById('err')
+				err.style.display = 'none'
+				btn.disabled = true
+				btn.innerHTML = '<span class="spinner" style="display:inline-block;vertical-align:middle;margin-right:6px;border-color:#fff;border-top-color:transparent"></span>Connecting&hellip;'
+				fetch('/save', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+					body: 'ssid=' + encodeURIComponent(document.getElementById('s').value) + '&password=' + encodeURIComponent(document.getElementById('p').value),
+				})
+					.then((r) => r.json())
+					.then((d) => {
+						if (d.success) {
+							document.getElementById('portal').style.display = 'none'
+							document.getElementById('hdr').style.display = 'none'
+							var sub = document.getElementById('sub')
+							if (sub) sub.style.display = 'none'
+							document.getElementById('done').style.display = ''
+							document.getElementById('done-hdr').textContent = cfg.connected_header
+							var doneSub = document.getElementById('done-sub')
+							if (cfg.connected_subheader) {
+								doneSub.innerHTML = cfg.connected_subheader
+							} else {
+								doneSub.remove()
+							}
+						} else {
+							err.textContent = 'Connection failed. Please check your credentials and try again.'
+							err.style.display = ''
+							btn.disabled = false
+							btn.textContent = 'Connect'
+						}
+					})
+					.catch(() => {
+						err.textContent = 'Request failed. Please try again.'
+						err.style.display = ''
+						btn.disabled = false
+						btn.textContent = 'Connect'
+					})
+			})
+		</script>
+	</body>
 </html>
