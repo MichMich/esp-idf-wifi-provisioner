@@ -1,8 +1,15 @@
-version: "0.2.0"
+version: "0.2.1"
 description: "Automatic WiFi connection management with captive portal fallback for ESP-IDF"
 license: "GPL-3.0-or-later"
 url: "https://github.com/MichMich/esp-idf-wifi-provisioner"
 repository: "https://github.com/MichMich/esp-idf-wifi-provisioner.git"
+tags:
+  - wifi
+  - provisioning
+  - captive-portal
+  - wifimanager
+  - nvs
+  - softap
 targets:
   - esp32
   - esp32s2
