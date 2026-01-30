@@ -2,6 +2,10 @@
 
 An ESP-IDF component that provides automatic WiFi connection management with a captive portal fallback.
 
+<p align="center">
+  <img src="docs/example.png" alt="Captive portal screenshot" width="300">
+</p>
+
 ## How It Works
 
 1. **Boot** — The device reads stored WiFi credentials from NVS (non-volatile storage).

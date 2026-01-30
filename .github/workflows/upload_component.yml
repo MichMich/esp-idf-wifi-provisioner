@@ -1,0 +1,20 @@
+name: Push component to ESP-IDF Component Registry
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  upload_component:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload component to registry
+        uses: espressif/upload-components-ci-action@v2
+        with:
+          components: "esp-idf-wifi-provisioner:."
+          namespace: "michmich"
+          version: ${{ github.ref_name }}
