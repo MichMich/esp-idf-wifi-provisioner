@@ -1,4 +1,4 @@
-version: "0.1.0"
+version: "0.2.0"
 description: "Automatic WiFi connection management with captive portal fallback for ESP-IDF"
 license: "GPL-3.0-or-later"
 url: "https://github.com/MichMich/esp-idf-wifi-provisioner"
